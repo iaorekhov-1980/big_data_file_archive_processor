@@ -7,6 +7,7 @@ import (
 // File represents a file entity in the database
 type File struct {
 	Hash      string    `json:"hash" db:"hash"`
+	Name      string    `json:"name" db:"name"`
 	Size      int64     `json:"size" db:"size"`
 	MimeType  string    `json:"mime_type" db:"mime_type"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -14,10 +15,11 @@ type File struct {
 }
 
 // NewFile creates a new File instance with current timestamps
-func NewFile(hash string, size int64, mimeType string) *File {
+func NewFile(hash, name string, size int64, mimeType string) *File {
 	now := time.Now()
 	return &File{
 		Hash:      hash,
+		Name:      name,
 		Size:      size,
 		MimeType:  mimeType,
 		CreatedAt: now,
