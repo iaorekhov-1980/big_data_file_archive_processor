@@ -14,9 +14,9 @@ type Repository interface {
 	InsertFile(ctx context.Context, file *models.File) error
 
 	// FilePath operations
-	GetFilePath(ctx context.Context, path string) (*models.FilePath, error)
+	GetFilePathByPathAndSource(ctx context.Context, path, sourceID string) (*models.FilePath, error)
 	InsertFilePath(ctx context.Context, filePath *models.FilePath) error
-	UpdateFilePathDeletedAt(ctx context.Context, path string, deletedAt *time.Time) error
+	UpdateFilePathDeletedAtByPathAndSource(ctx context.Context, path, sourceID string, deletedAt *time.Time) error
 	GetFilePathsBySourceAndActive(ctx context.Context, sourceID string, isActive bool) ([]*models.FilePath, error)
 	GetFilePathsBySourceAndInactiveNotDeleted(ctx context.Context, sourceID string) ([]*models.FilePath, error)
 
