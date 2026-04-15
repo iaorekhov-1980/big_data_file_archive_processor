@@ -7,6 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/iaorekhov-1980/big_data_file_archive_processor/internal/repository"
+	"github.com/iaorekhov-1980/big_data_file_archive_processor/internal/testutils"
 )
 
 func TestFileRepository_Integration(t *testing.T) {
@@ -15,14 +18,14 @@ func TestFileRepository_Integration(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	pool, cleanup := SetupTestDatabase(t, ctx)
+	pool, cleanup := testutils.SetupTestDatabase(t, ctx)
 	defer cleanup()
 
 	repo := NewFileRepository(pool)
 
 	t.Run("InsertFile and GetFileByHash", func(t *testing.T) {
 		// Create test file
-		file := createTestFile("testhash123", "testfile.txt")
+		file := testutils.CreateTestFile("testhash123", "testfile.txt")
 
 		// Insert file
 		err := repo.InsertFile(ctx, file)
@@ -48,24 +51,24 @@ func TestFileRepository_Integration(t *testing.T) {
 		assert.Nil(t, file, "Expected nil file for non-existent hash")
 
 		// Verify it's a NotFoundError
-		_, ok := err.(interface{ Resource() string })
-		assert.True(t, ok, "Expected NotFoundError type")
+		_, ok := err.(*repository.NotFoundError)
+		assert.True(t, ok, "Expected NotFoundError type, got: %v", err)
 	})
 
 	t.Run("InsertFile_Duplicate", func(t *testing.T) {
 		// Create and insert first file
-		file1 := createTestFile("duplicatehash", "file1.txt")
+		file1 := testutils.CreateTestFile("duplicatehash", "file1.txt")
 		err := repo.InsertFile(ctx, file1)
 		require.NoError(t, err, "Failed to insert first file")
 
 		// Try to insert duplicate file with same hash
-		file2 := createTestFile("duplicatehash", "file2.txt")
+		file2 := testutils.CreateTestFile("duplicatehash", "file2.txt")
 		err = repo.InsertFile(ctx, file2)
 		assert.Error(t, err, "Expected error for duplicate file")
 
 		// Verify it's a DuplicateError
-		_, ok := err.(interface{ Resource() string })
-		assert.True(t, ok, "Expected DuplicateError type")
+		_, ok := err.(*repository.DuplicateError)
+		assert.True(t, ok, "Expected DuplicateError type, got: %v", err)
 	})
 
 	t.Run("InsertFile_MultipleFiles", func(t *testing.T) {
@@ -80,7 +83,7 @@ func TestFileRepository_Integration(t *testing.T) {
 		}
 
 		for _, f := range files {
-			file := createTestFile(f.hash, f.name)
+			file := testutils.CreateTestFile(f.hash, f.name)
 			err := repo.InsertFile(ctx, file)
 			require.NoError(t, err, "Failed to insert file %s", f.name)
 

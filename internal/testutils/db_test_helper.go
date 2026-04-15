@@ -1,4 +1,4 @@
-package postgres
+package testutils
 
 import (
 	"context"
@@ -18,13 +18,20 @@ type TestDBConfig struct {
 	DSN string
 }
 
-// GetTestDBConfig returns test database configuration from environment
+// GetTestDBConfig returns test database configuration from config file
 func GetTestDBConfig(t *testing.T) *TestDBConfig {
-	dsn := os.Getenv("TEST_POSTGRES_DSN")
-	if dsn == "" {
-		t.Skip("TEST_POSTGRES_DSN environment variable is not set, skipping database tests")
+	// First try environment variable (for backward compatibility)
+	if dsn := os.Getenv("TEST_POSTGRES_DSN"); dsn != "" {
+		return &TestDBConfig{DSN: dsn}
 	}
-	return &TestDBConfig{DSN: dsn}
+
+	// Try to load from config file
+	config, err := LoadTestConfig()
+	if err != nil {
+		t.Skipf("Failed to load test config: %v", err)
+	}
+
+	return &TestDBConfig{DSN: config.GetPostgresDSN()}
 }
 
 // SetupTestDatabase creates a test database connection
@@ -47,7 +54,7 @@ func SetupTestDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, func()
 	// Cleanup function
 	cleanup := func() {
 		// Clean up test data
-		err := cleanTestData(ctx, pool)
+		err := CleanTestData(ctx, pool)
 		require.NoError(t, err, "Failed to clean test data")
 
 		pool.Close()
@@ -81,8 +88,8 @@ func verifySchema(ctx context.Context, pool *pgxpool.Pool) error {
 	return nil
 }
 
-// cleanTestData cleans up all test data from the database
-func cleanTestData(ctx context.Context, pool *pgxpool.Pool) error {
+// CleanTestData cleans up all test data from the database
+func CleanTestData(ctx context.Context, pool *pgxpool.Pool) error {
 	// Delete all data in reverse order of dependencies
 	queries := []string{
 		"DELETE FROM source_processing",
@@ -100,8 +107,8 @@ func cleanTestData(ctx context.Context, pool *pgxpool.Pool) error {
 	return nil
 }
 
-// createTestFile creates a test file model
-func createTestFile(hash, name string) *models.File {
+// CreateTestFile creates a test file model
+func CreateTestFile(hash, name string) *models.File {
 	return &models.File{
 		Hash:      hash,
 		Name:      name,
@@ -112,8 +119,8 @@ func createTestFile(hash, name string) *models.File {
 	}
 }
 
-// createTestFilePath creates a test file path model
-func createTestFilePath(path, sourceID, hash string, isActive bool) *models.FilePath {
+// CreateTestFilePath creates a test file path model
+func CreateTestFilePath(path, sourceID, hash string, isActive bool) *models.FilePath {
 	return &models.FilePath{
 		Path:      path,
 		SourceID:  sourceID,
@@ -124,8 +131,8 @@ func createTestFilePath(path, sourceID, hash string, isActive bool) *models.File
 	}
 }
 
-// createTestSourceProcessing creates a test source processing model
-func createTestSourceProcessing(sourceID string) *models.SourceProcessing {
+// CreateTestSourceProcessing creates a test source processing model
+func CreateTestSourceProcessing(sourceID string) *models.SourceProcessing {
 	now := time.Now()
 	scanStatus := "completed"
 	totalFilesFound := int64(10)

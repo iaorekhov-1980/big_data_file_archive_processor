@@ -1,0 +1,9 @@
+# PostgreSQL Test Database Configuration
+# Copy this file to test_config.toml and fill in your credentials
+
+[postgres]
+host = "localhost"
+port = 5432
+database = "ivordb"
+username = "gouser"
+password = "gopwd"
