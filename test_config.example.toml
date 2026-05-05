@@ -7,3 +7,10 @@ port = 5432
 database = "ivordb"
 username = "gouser"
 password = "gopwd"
+
+# Yandex Disk Test Configuration (optional)
+# Required for Yandex Disk API connectivity tests
+# [yandex_disk]
+# token = "your_yandex_oauth_token_here"
+# base_url = "https://cloud-api.yandex.net/v1/disk"
+# test_folder = "/path/to/test/folder"

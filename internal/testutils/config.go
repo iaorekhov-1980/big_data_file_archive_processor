@@ -16,6 +16,13 @@ type TestConfig struct {
 		Username string `toml:"username"`
 		Password string `toml:"password"`
 	} `toml:"postgres"`
+
+	// YandexDisk holds optional Yandex Disk API test configuration
+	YandexDisk struct {
+		Token      string `toml:"token"`
+		BaseURL    string `toml:"base_url"`
+		TestFolder string `toml:"test_folder"`
+	} `toml:"yandex_disk"`
 }
 
 // LoadTestConfig loads test configuration from file
@@ -23,6 +30,7 @@ func LoadTestConfig() (*TestConfig, error) {
 	// Look for config file in current directory and parent directories
 	configPaths := []string{
 		"test_config.toml",
+		"../../test_config.toml",
 		"../../../test_config.toml",
 	}
 
@@ -59,6 +67,24 @@ func (c *TestConfig) GetPostgresDSN() string {
 		c.Postgres.Host,
 		c.Postgres.Port,
 		c.Postgres.Database)
+}
+
+// GetYandexDiskToken returns the Yandex Disk OAuth token from config
+func (c *TestConfig) GetYandexDiskToken() string {
+	return c.YandexDisk.Token
+}
+
+// GetYandexDiskTestFolder returns the test folder path for Yandex Disk tests
+func (c *TestConfig) GetYandexDiskTestFolder() string {
+	return c.YandexDisk.TestFolder
+}
+
+// GetYandexDiskBaseURL returns the Yandex Disk API base URL from config
+func (c *TestConfig) GetYandexDiskBaseURL() string {
+	if c.YandexDisk.BaseURL == "" {
+		return "https://cloud-api.yandex.net/v1/disk"
+	}
+	return c.YandexDisk.BaseURL
 }
 
 // CreateTestConfig creates a test config file from example
