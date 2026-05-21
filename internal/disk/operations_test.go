@@ -3,11 +3,11 @@ package disk
 import (
 	"context"
 	"testing"
-	"time"
 
-	"github.com/iaorekhov-1980/big_data_file_archive_processor/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/iaorekhov-1980/big_data_file_archive_processor/internal/testutils"
 )
 
 // TestYandexDiskClient_GetFileInfo_NotFound verifies that querying a non-existent
@@ -19,10 +19,11 @@ func TestYandexDiskClient_GetFileInfo_NotFound(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(10*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
@@ -47,10 +48,11 @@ func TestYandexDiskClient_GetFileInfo_Success(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(15*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
@@ -74,10 +76,11 @@ func TestYandexDiskClient_GetFolderContents_Root(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(15*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
@@ -105,10 +108,11 @@ func TestYandexDiskClient_ListFiles(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(30*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
@@ -151,10 +155,11 @@ func TestYandexDiskClient_ListFiles_WithSourceFolder(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(15*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
@@ -185,10 +190,11 @@ func TestYandexDiskClient_GetFolderContents_Subfolder(t *testing.T) {
 	}
 
 	baseURL := getTestBaseURL(t)
+	timeout := getTestTimeout(t)
 
 	client := NewYandexDiskClient(token,
 		WithBaseURL(baseURL),
-		WithTimeout(15*time.Second),
+		WithTimeout(timeout),
 	)
 
 	ctx := context.Background()
