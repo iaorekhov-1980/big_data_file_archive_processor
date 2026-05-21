@@ -14,12 +14,17 @@ import (
 
 // FilePathRepository handles file path-related database operations
 type FilePathRepository struct {
-	pool *pgxpool.Pool
+	q Querier
 }
 
 // NewFilePathRepository creates a new FilePathRepository instance
 func NewFilePathRepository(pool *pgxpool.Pool) *FilePathRepository {
-	return &FilePathRepository{pool: pool}
+	return &FilePathRepository{q: pool}
+}
+
+// WithTx returns a new FilePathRepository that uses the given transaction.
+func (r *FilePathRepository) WithTx(tx pgx.Tx) *FilePathRepository {
+	return &FilePathRepository{q: tx}
 }
 
 // GetFilePathByPathAndSource retrieves a file path by its path and source ID
@@ -32,7 +37,7 @@ func (r *FilePathRepository) GetFilePathByPathAndSource(ctx context.Context, pat
 
 	var filePath models.FilePath
 	var deletedAt *time.Time
-	err := r.pool.QueryRow(ctx, query, path, sourceID).Scan(
+	err := r.q.QueryRow(ctx, query, path, sourceID).Scan(
 		&filePath.Path,
 		&filePath.SourceID,
 		&filePath.Hash,
@@ -60,7 +65,7 @@ func (r *FilePathRepository) InsertFilePath(ctx context.Context, filePath *model
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.q.Exec(ctx, query,
 		filePath.Path,
 		filePath.SourceID,
 		filePath.Hash,
@@ -89,7 +94,7 @@ func (r *FilePathRepository) UpdateFilePathDeletedAtByPathAndSource(ctx context.
 		WHERE path = $2 AND source_id = $3
 	`
 
-	result, err := r.pool.Exec(ctx, query, deletedAt, path, sourceID)
+	result, err := r.q.Exec(ctx, query, deletedAt, path, sourceID)
 	if err != nil {
 		return repository.NewRepositoryError("UpdateFilePathDeletedAtByPathAndSource", err)
 	}
@@ -110,7 +115,7 @@ func (r *FilePathRepository) GetFilePathsBySourceAndActive(ctx context.Context, 
 		ORDER BY path
 	`
 
-	rows, err := r.pool.Query(ctx, query, sourceID, isActive)
+	rows, err := r.q.Query(ctx, query, sourceID, isActive)
 	if err != nil {
 		return nil, repository.NewRepositoryError("GetFilePathsBySourceAndActive", err)
 	}
@@ -152,7 +157,7 @@ func (r *FilePathRepository) GetFilePathsBySourceAndInactiveNotDeleted(ctx conte
 		ORDER BY path
 	`
 
-	rows, err := r.pool.Query(ctx, query, sourceID)
+	rows, err := r.q.Query(ctx, query, sourceID)
 	if err != nil {
 		return nil, repository.NewRepositoryError("GetFilePathsBySourceAndInactiveNotDeleted", err)
 	}

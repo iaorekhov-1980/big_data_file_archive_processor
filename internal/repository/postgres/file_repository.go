@@ -13,12 +13,17 @@ import (
 
 // FileRepository handles file-related database operations
 type FileRepository struct {
-	pool *pgxpool.Pool
+	q Querier
 }
 
 // NewFileRepository creates a new FileRepository instance
 func NewFileRepository(pool *pgxpool.Pool) *FileRepository {
-	return &FileRepository{pool: pool}
+	return &FileRepository{q: pool}
+}
+
+// WithTx returns a new FileRepository that uses the given transaction.
+func (r *FileRepository) WithTx(tx pgx.Tx) *FileRepository {
+	return &FileRepository{q: tx}
 }
 
 // GetFileByHash retrieves a file by its hash
@@ -30,7 +35,7 @@ func (r *FileRepository) GetFileByHash(ctx context.Context, hash string) (*model
 	`
 
 	var file models.File
-	err := r.pool.QueryRow(ctx, query, hash).Scan(
+	err := r.q.QueryRow(ctx, query, hash).Scan(
 		&file.Hash,
 		&file.Name,
 		&file.Size,
@@ -56,7 +61,7 @@ func (r *FileRepository) InsertFile(ctx context.Context, file *models.File) erro
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.q.Exec(ctx, query,
 		file.Hash,
 		file.Name,
 		file.Size,

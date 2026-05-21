@@ -14,12 +14,17 @@ import (
 
 // SourceProcessingRepository handles source processing-related database operations
 type SourceProcessingRepository struct {
-	pool *pgxpool.Pool
+	q Querier
 }
 
 // NewSourceProcessingRepository creates a new SourceProcessingRepository instance
 func NewSourceProcessingRepository(pool *pgxpool.Pool) *SourceProcessingRepository {
-	return &SourceProcessingRepository{pool: pool}
+	return &SourceProcessingRepository{q: pool}
+}
+
+// WithTx returns a new SourceProcessingRepository that uses the given transaction.
+func (r *SourceProcessingRepository) WithTx(tx pgx.Tx) *SourceProcessingRepository {
+	return &SourceProcessingRepository{q: tx}
 }
 
 // GetSourceProcessing retrieves source processing status by source ID
@@ -37,7 +42,7 @@ func (r *SourceProcessingRepository) GetSourceProcessing(ctx context.Context, so
 	`
 
 	var sp models.SourceProcessing
-	err := r.pool.QueryRow(ctx, query, sourceID).Scan(
+	err := r.q.QueryRow(ctx, query, sourceID).Scan(
 		&sp.SourceID,
 		&sp.ScanStartedAt, &sp.ScanCompletedAt, &sp.CurrentOffset, &sp.TotalFilesFound, &sp.ScanStatus,
 		&sp.ProcessingStartedAt, &sp.ProcessingCompletedAt, &sp.FilesProcessed, &sp.FilesDeleted, &sp.ProcessingStatus,
@@ -88,7 +93,7 @@ func (r *SourceProcessingRepository) UpsertSourceProcessing(ctx context.Context,
 			updated_at = EXCLUDED.updated_at
 	`
 
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.q.Exec(ctx, query,
 		sourceProcessing.SourceID,
 		sourceProcessing.ScanStartedAt, sourceProcessing.ScanCompletedAt, sourceProcessing.CurrentOffset, sourceProcessing.TotalFilesFound, sourceProcessing.ScanStatus,
 		sourceProcessing.ProcessingStartedAt, sourceProcessing.ProcessingCompletedAt, sourceProcessing.FilesProcessed, sourceProcessing.FilesDeleted, sourceProcessing.ProcessingStatus,
@@ -125,7 +130,7 @@ func (r *SourceProcessingRepository) UpdateSourceProcessingStatus(ctx context.Co
 	query += "updated_at = NOW() WHERE source_id = $" + fmt.Sprintf("%d", argIndex)
 	args = append(args, sourceID)
 
-	result, err := r.pool.Exec(ctx, query, args...)
+	result, err := r.q.Exec(ctx, query, args...)
 	if err != nil {
 		return repository.NewRepositoryError("UpdateSourceProcessingStatus", err)
 	}

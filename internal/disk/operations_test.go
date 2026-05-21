@@ -117,16 +117,15 @@ func TestYandexDiskClient_ListFiles(t *testing.T) {
 
 	ctx := context.Background()
 
-	files, err := client.ListFiles(ctx, "", 0, 10)
+	items, err := client.ListFiles(ctx, "", 0, 10)
 	require.NoError(t, err, "Failed to list files")
 
-	assert.NotNil(t, files)
-	t.Logf("ListFiles returned %d files (limit=10)", len(files))
+	assert.NotNil(t, items)
+	t.Logf("ListFiles returned %d items (limit=10)", len(items))
 
-	for i, file := range files {
-		assert.Equal(t, "file", file.Type, "Item %d is not a file", i)
-		assert.NotEmpty(t, file.Path, "File %d has empty path", i)
-		t.Logf("  File %d: %s (size: %d bytes)", i, file.Path, file.Size)
+	for i, item := range items {
+		assert.NotEmpty(t, item.Path, "Item %d has empty path", i)
+		t.Logf("  Item %d: [%s] %s (size: %d bytes)", i, item.Type, item.Path, item.Size)
 	}
 }
 
@@ -164,15 +163,15 @@ func TestYandexDiskClient_ListFiles_WithSourceFolder(t *testing.T) {
 
 	ctx := context.Background()
 
-	files, err := client.ListFiles(ctx, testFolder, 0, 10)
+	fullPath := "/ods/" + testFolder
+	items, err := client.ListFiles(ctx, fullPath, 0, 10)
 	require.NoError(t, err, "Failed to list files from source folder")
 
-	assert.NotNil(t, files)
-	t.Logf("ListFiles from '%s' returned %d files", testFolder, len(files))
+	assert.NotNil(t, items)
+	t.Logf("ListFiles from '%s' returned %d items", fullPath, len(items))
 
-	for i, file := range files {
-		assert.Equal(t, "file", file.Type, "Item %d is not a file", i)
-		t.Logf("  File %d: %s", i, file.Path)
+	for i, item := range items {
+		t.Logf("  Item %d: [%s] %s", i, item.Type, item.Path)
 	}
 }
 
@@ -199,11 +198,12 @@ func TestYandexDiskClient_GetFolderContents_Subfolder(t *testing.T) {
 
 	ctx := context.Background()
 
-	contents, err := client.GetFolderContents(ctx, testFolder)
+	fullPath := "/ods/" + testFolder
+	contents, err := client.GetFolderContents(ctx, fullPath)
 	require.NoError(t, err, "Failed to list folder contents")
 
 	assert.NotNil(t, contents)
-	t.Logf("Folder '%s' contains %d items", testFolder, len(contents))
+	t.Logf("Folder '%s' contains %d items", fullPath, len(contents))
 
 	for i, item := range contents {
 		assert.NotEmpty(t, item.Path, "Item %d has empty path", i)

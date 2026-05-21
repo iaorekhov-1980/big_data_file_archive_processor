@@ -7,7 +7,9 @@ import (
 	"net/url"
 )
 
-// ListFiles retrieves a paginated list of all files from the specified source folder.
+// ListFiles retrieves a paginated list of files from the specified source folder.
+// Uses the /resources endpoint which properly scopes results to the given folder path.
+// If sourceFolder is empty, lists from root.
 // Implements the DiskClient interface.
 func (c *YandexDiskClient) ListFiles(ctx context.Context, sourceFolder string, offset, limit int) ([]Resource, error) {
 	if err := c.rateLimitWait(ctx); err != nil {
@@ -15,13 +17,15 @@ func (c *YandexDiskClient) ListFiles(ctx context.Context, sourceFolder string, o
 	}
 
 	params := url.Values{}
-	if sourceFolder != "" {
+	if sourceFolder == "" {
+		params.Set("path", "/")
+	} else {
 		params.Set("path", sourceFolder)
 	}
 	params.Set("offset", fmt.Sprintf("%d", offset))
 	params.Set("limit", fmt.Sprintf("%d", limit))
 
-	endpoint := c.baseURL + "/resources/files?" + params.Encode()
+	endpoint := c.baseURL + "/resources?" + params.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -29,17 +33,19 @@ func (c *YandexDiskClient) ListFiles(ctx context.Context, sourceFolder string, o
 	}
 
 	var response struct {
-		Items  []Resource `json:"items"`
-		Total  int        `json:"total"`
-		Offset int        `json:"offset"`
-		Limit  int        `json:"limit"`
+		Embedded struct {
+			Items  []Resource `json:"items"`
+			Total  int        `json:"total"`
+			Offset int        `json:"offset"`
+			Limit  int        `json:"limit"`
+		} `json:"_embedded"`
 	}
 
 	if err := c.doRequest(req, &response); err != nil {
 		return nil, fmt.Errorf("list files request failed: %w", err)
 	}
 
-	return response.Items, nil
+	return response.Embedded.Items, nil
 }
 
 // GetFolderContents retrieves the contents of a folder at the specified path.
