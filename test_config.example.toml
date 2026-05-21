@@ -14,3 +14,5 @@ password = "gopwd"
 # token = "your_yandex_oauth_token_here"
 # base_url = "https://cloud-api.yandex.net/v1/disk"
 # test_folder = "/path/to/test/folder"
+# timeout = 60
+# rate_limit_delay_ms = 200

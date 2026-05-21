@@ -19,9 +19,11 @@ type TestConfig struct {
 
 	// YandexDisk holds optional Yandex Disk API test configuration
 	YandexDisk struct {
-		Token      string `toml:"token"`
-		BaseURL    string `toml:"base_url"`
-		TestFolder string `toml:"test_folder"`
+		Token            string `toml:"token"`
+		BaseURL          string `toml:"base_url"`
+		TestFolder       string `toml:"test_folder"`
+		Timeout          int    `toml:"timeout"`
+		RateLimitDelayMs int    `toml:"rate_limit_delay_ms"`
 	} `toml:"yandex_disk"`
 }
 
@@ -85,6 +87,22 @@ func (c *TestConfig) GetYandexDiskBaseURL() string {
 		return "https://cloud-api.yandex.net/v1/disk"
 	}
 	return c.YandexDisk.BaseURL
+}
+
+// GetYandexDiskTimeout returns the HTTP client timeout in seconds from config
+func (c *TestConfig) GetYandexDiskTimeout() int {
+	if c.YandexDisk.Timeout <= 0 {
+		return 30
+	}
+	return c.YandexDisk.Timeout
+}
+
+// GetYandexDiskRateLimitDelayMs returns the rate limit delay in milliseconds from config
+func (c *TestConfig) GetYandexDiskRateLimitDelayMs() int {
+	if c.YandexDisk.RateLimitDelayMs < 0 {
+		return 200
+	}
+	return c.YandexDisk.RateLimitDelayMs
 }
 
 // CreateTestConfig creates a test config file from example
