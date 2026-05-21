@@ -11,12 +11,15 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	DBType         string
-	PostgresDSN    string
-	YandexDiskToken string
-	LogLevel       string
-	ScanPageSize   int
-	RateLimitDelayMs int
+	DBType                     string
+	PostgresDSN                string
+	YandexDiskToken            string
+	YandexDiskBaseURL          string
+	YandexDiskTimeout          int // in seconds
+	YandexDiskRateLimitDelayMs int
+	LogLevel                   string
+	ScanPageSize               int
+	RateLimitDelayMs           int
 }
 
 var (
@@ -32,12 +35,15 @@ func Load() (*Config, error) {
 		_ = godotenv.Load()
 
 		configInstance = &Config{
-			DBType:         getEnvWithDefault("DB_TYPE", "postgres"),
-			PostgresDSN:    getEnvRequired("POSTGRES_DSN"),
-			YandexDiskToken: getEnvRequired("YANDEX_DISK_TOKEN"),
-			LogLevel:       getEnvWithDefault("LOG_LEVEL", "info"),
-			ScanPageSize:   getEnvIntWithDefault("SCAN_PAGE_SIZE", 100),
-			RateLimitDelayMs: getEnvIntWithDefault("RATE_LIMIT_DELAY_MS", 200),
+			DBType:                     getEnvWithDefault("DB_TYPE", "postgres"),
+			PostgresDSN:                getEnvRequired("POSTGRES_DSN"),
+			YandexDiskToken:            getEnvRequired("YANDEX_DISK_TOKEN"),
+			YandexDiskBaseURL:          getEnvWithDefault("YANDEX_DISK_BASE_URL", "https://cloud-api.yandex.net/v1/disk"),
+			YandexDiskTimeout:          getEnvIntWithDefault("YANDEX_DISK_TIMEOUT", 30),
+			YandexDiskRateLimitDelayMs: getEnvIntWithDefault("YANDEX_DISK_RATE_LIMIT_DELAY_MS", 200),
+			LogLevel:                   getEnvWithDefault("LOG_LEVEL", "info"),
+			ScanPageSize:               getEnvIntWithDefault("SCAN_PAGE_SIZE", 100),
+			RateLimitDelayMs:           getEnvIntWithDefault("RATE_LIMIT_DELAY_MS", 200),
 		}
 
 		// Validate configuration
@@ -72,6 +78,18 @@ func (c *Config) validate() error {
 		return fmt.Errorf("YANDEX_DISK_TOKEN is required")
 	}
 
+	if c.YandexDiskBaseURL == "" {
+		return fmt.Errorf("YANDEX_DISK_BASE_URL is required")
+	}
+
+	if c.YandexDiskTimeout <= 0 {
+		return fmt.Errorf("YANDEX_DISK_TIMEOUT must be positive, got: %d", c.YandexDiskTimeout)
+	}
+
+	if c.YandexDiskRateLimitDelayMs < 0 {
+		return fmt.Errorf("YANDEX_DISK_RATE_LIMIT_DELAY_MS must be non-negative, got: %d", c.YandexDiskRateLimitDelayMs)
+	}
+
 	validLogLevels := map[string]bool{
 		"debug": true,
 		"info":  true,
@@ -103,8 +121,8 @@ func getEnvRequired(key string) string {
 }
 
 func getEnvWithDefault(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
+	value, exists := os.LookupEnv(key)
+	if !exists {
 		return defaultValue
 	}
 	return value
@@ -137,6 +155,21 @@ func (c *Config) GetPostgresDSN() string {
 // GetYandexDiskToken returns the Yandex.Disk OAuth token
 func (c *Config) GetYandexDiskToken() string {
 	return c.YandexDiskToken
+}
+
+// GetYandexDiskBaseURL returns the Yandex Disk API base URL
+func (c *Config) GetYandexDiskBaseURL() string {
+	return c.YandexDiskBaseURL
+}
+
+// GetYandexDiskTimeout returns the HTTP client timeout in seconds
+func (c *Config) GetYandexDiskTimeout() int {
+	return c.YandexDiskTimeout
+}
+
+// GetYandexDiskRateLimitDelayMs returns the rate limit delay in milliseconds
+func (c *Config) GetYandexDiskRateLimitDelayMs() int {
+	return c.YandexDiskRateLimitDelayMs
 }
 
 // GetScanPageSize returns the page size for scanning operations
