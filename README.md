@@ -129,3 +129,52 @@ go test ./...
 ## Contributing
 
 [Add contribution guidelines]
+
+## Yandex Disk API Client
+
+The `internal/disk` package provides a Yandex Disk REST API client with:
+
+- **Interface-based design**: `DiskClient` interface with `ListFiles`, `GetFolderContents`, `GetFileInfo`
+- **Rate limiting**: Configurable delay between requests
+- **Error classification**: `DiskError` with `IsNotFound()`, `IsAuthError()`, `IsRateLimited()`
+- **Factory**: `NewDiskClient(cfg)` creates a configured client from `config.Config`
+
+### Configuration Reference
+
+| Environment Variable | Default | Description |
+|---|---|---|
+| `YANDEX_DISK_TOKEN` | (required) | Yandex OAuth token |
+| `YANDEX_DISK_BASE_URL` | `https://cloud-api.yandex.net/v1/disk` | API base URL |
+| `YANDEX_DISK_TIMEOUT` | `30` | HTTP client timeout in seconds |
+| `YANDEX_DISK_RATE_LIMIT_DELAY_MS` | `200` | Delay between API requests in ms |
+
+### Running Tests
+
+```bash
+# All tests
+go test ./...
+
+# Mock-based unit tests (no API token required)
+go test ./internal/disk/ -run "^Test(DiskError|NetworkError|NewDiskClient|DoRequest)_"
+
+# Real API tests (requires test_config.toml with token)
+go test ./internal/disk/ -run "^TestYandexDiskClient_"
+```
+
+### Test Configuration
+
+Create `test_config.toml` from `test_config.example.toml`:
+
+```bash
+cp test_config.example.toml test_config.toml
+```
+
+Test configuration fields:
+
+| Field | Default | Description |
+|---|---|---|
+| `token` | (required) | Yandex OAuth token for tests |
+| `base_url` | `https://cloud-api.yandex.net/v1/disk` | API base URL |
+| `test_folder` | (optional) | Folder path for integration tests |
+| `timeout` | `30` | HTTP client timeout in seconds |
+| `rate_limit_delay_ms` | `200` | Delay between API requests in ms |
