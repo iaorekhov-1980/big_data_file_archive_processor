@@ -1,0 +1,50 @@
+# Build artifacts
+bin/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Coverage
+*.out
+coverage.html
+
+# Dependencies
+vendor/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Secrets / local config
+.env
+.env.*
+test_config.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform state
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+
+# Logs
+*.log
+
+# Test fixtures (binary/large data, not useful for context)
+testdata/
+
+# Git internals
+.git/
